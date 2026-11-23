@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Player Login</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="game-container">
+
+        <h1>Welcome Back!</h1>
+        <p class="subtitle">Login to continue playing.</p>
+
+        {% if error %}
+            <p class="auth-error">{{ error }}</p>
+        {% endif %}
+
+        <form method="POST" class="auth-form">
+
+            <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                required
+            >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Your password"
+                required
+            >
+
+            <button type="submit" class="reset">
+                Login
+            </button>
+
+        </form>
+
+        <p class="auth-link">
+            Don't have an account?
+            <a href="{{ url_for('register') }}">Register</a>
+        </p>
+
+    </main>
+
+</body>
+</html>

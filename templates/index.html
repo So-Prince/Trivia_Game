@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="game-container">
+
+        <div class="account-bar">
+
+            <span>
+                Welcome, {{ nickname }}!
+            </span>
+
+            {% if logged_in %}
+            <a href="{{ url_for('dashboard') }}">My Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+            {% endif %}
+
+        </div>
+
+        <h1>Rock Paper Scissors</h1>
+        <p class="subtitle">
+            Choose your move and challenge the computer!
+        </p>
+
+        <section class="scoreboard">
+
+            <section class="statistics">
+
+                <div class="stat-card">
+                    <p>WINS</p>
+                    <h2 id="wins">{{ player_score }}</h2>
+                </div>
+
+                <div class="stat-card">
+                    <p>LOSSES</p>
+                    <h2 id="losses">{{ computer_score }}</h2>
+                </div>
+
+                <div class="stat-card">
+                    <p>DRAWS</p>
+                    <h2 id="draws">{{ draw_score }}</h2>
+                </div>
+
+            </section>
+
+
+            <div class="score">
+                <p>YOU</p>
+                <h2 id="player-score">{{ player_score }}</h2>
+            </div>
+
+            <div class="score">
+                <p>COMPUTER</p>
+                <h2 id="computer-score">{{ computer_score }}</h2>
+            </div>
+
+        </section>
+
+        <h3>Make your choice</h3>
+
+        <div class="choices">
+
+            <button type="button" data-choice="rock">
+                ✊
+                <span>Rock</span>
+            </button>
+
+            <button type="button" data-choice="paper">
+                ✋
+                <span>Paper</span>
+            </button>
+
+            <button type="button" data-choice="scissor">
+                ✌️
+                <span>Scissors</span>
+            </button>
+
+        </div>
+
+        <section class="result" id="result" aria-live="polite">
+            <h2 id="result-title">Ready to play?</h2>
+            <p id="player-choice">Your choice: -</p>
+            <p id="computer-choice">Computer choice: -</p>
+        </section>
+
+
+        <section class="history-section">
+
+            <h3>Recent Game History</h3>
+
+            <ul id="history-list">
+
+                {% for round in history %}
+
+                <li class="{{ round.outcome }}">
+                    <span>
+                        {{ round.user }} vs {{ round.computer }}
+                    </span>
+
+                    <strong>{{ round.result }}</strong>
+                </li>
+
+                {% else %}
+
+                <li id="empty-history">
+                    No games played yet.
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </section>
+
+        <button type="button" class="reset" id="reset-button">
+            Reset Score
+        </button>
+
+    </main>
+
+    <script>
+        const choiceButtons = document.querySelectorAll("[data-choice]");
+
+        const playerScore = document.getElementById("player-score");
+        const computerScore = document.getElementById("computer-score");
+
+        const resultTitle = document.getElementById("result-title");
+        const playerChoice = document.getElementById("player-choice");
+        const computerChoice = document.getElementById("computer-choice");
+
+        const resetButton = document.getElementById("reset-button");
+
+        const wins = document.getElementById("wins");
+        const losses = document.getElementById("losses");
+        const draws = document.getElementById("draws");
+
+        const historyList = document.getElementById("history-list");
+        
+        const emoji = {
+            rock: "✊",
+            paper: "✋",
+            scissor: "✌️"
+        };
+
+
+        function updateHistory(history) {
+
+            historyList.innerHTML = "";
+
+            if (history.length === 0) {
+                const emptyMessage = document.createElement("li");
+                emptyMessage.textContent = "No games played yet.";
+                historyList.appendChild(emptyMessage);
+                return;
+            }
+
+            history.forEach(round => {
+
+                const item = document.createElement("li");
+                item.className = round.outcome;
+
+                const moves = document.createElement("span");
+                moves.textContent =
+                    round.user + " vs " + round.computer;
+
+                const result = document.createElement("strong");
+                result.textContent = round.result;
+
+                item.appendChild(moves);
+                item.appendChild(result);
+
+                historyList.appendChild(item);
+
+            });
+        }
+
+        choiceButtons.forEach(button => {
+
+            button.addEventListener("click", async () => {
+
+                const choice = button.dataset.choice;
+
+                choiceButtons.forEach(btn => btn.disabled = true);
+
+                try {
+
+                    const response = await fetch("/play", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            choice: choice
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || "Something went wrong");
+                    }
+
+                    playerScore.textContent = data.player_score;
+                    computerScore.textContent = data.computer_score;
+                    wins.textContent = data.player_score;
+                    losses.textContent = data.computer_score;
+                    draws.textContent = data.draw_score;
+
+                    updateHistory(data.history);
+
+                    resultTitle.textContent = data.result;
+
+                    playerChoice.textContent =
+                        "You picked: " + emoji[data.user] + " " + data.user;
+
+                    computerChoice.textContent =
+                        "Computer picked: " + emoji[data.computer] + " " + data.computer;
+
+                } catch (error) {
+
+                    resultTitle.textContent = "Error: " + error.message;
+
+                } finally {
+
+                    choiceButtons.forEach(btn => btn.disabled = false);
+
+                }
+
+            });
+
+        });
+
+        resetButton.addEventListener("click", async () => {
+
+            resetButton.disabled = true;
+
+            try {
+
+                const response = await fetch("/reset", {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not reset the game");
+                }
+
+                playerScore.textContent = data.player_score;
+                computerScore.textContent = data.computer_score;
+
+                resultTitle.textContent = "Game reset! Ready to play?";
+                playerChoice.textContent = "Your choice: -";
+                computerChoice.textContent = "Computer choice: -";
+                wins.textContent = 0;
+                losses.textContent = 0;
+                draws.textContent = 0;
+
+                updateHistory([]);
+
+            } catch (error) {
+
+                resultTitle.textContent = "Error: " + error.message;
+
+            } finally {
+
+                resetButton.disabled = false;
+
+            }
+
+        });
+    </script>
+
+</body>
+</html>

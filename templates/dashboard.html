@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Player Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="game-container dashboard">
+
+        <header class="dashboard-header">
+
+            <div>
+                <h1>Welcome, {{ player.nickname }}!</h1>
+                <p>{{ player.email }}</p>
+            </div>
+
+            <a href="{{ url_for('logout') }}">Logout</a>
+
+        </header>
+
+        <h2>Your Statistics</h2>
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <h3>Wins</h3>
+                <p>{{ player.wins }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Losses</h3>
+                <p>{{ player.losses }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Draws</h3>
+                <p>{{ player.draws }}</p>
+            </div>
+
+        </section>
+
+        <section class="performance-card">
+
+            <h2>Gaming Performance</h2>
+
+            <p>Total Games: {{ total_games }}</p>
+
+            <p>Win Rate: {{ win_rate }}%</p>
+
+        </section>
+
+        <a href="{{ url_for('home') }}" class="dashboard-button">
+            Return to Game
+        </a>
+
+    </main>
+
+</body>
+</html>
